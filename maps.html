@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://d3js.org/topojson.v1.js"></script>
+    <script src="http://d3js.org/queue.v1.min.js"></script>
+    <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
+
+    <style type="text/css">
+
+      body {
+        font-family: Arial, sans-serif;
+      }
+
+      .pc {
+        fill: #bdbdbd;
+        stroke: #fff;
+        stroke-width: 0.5px;
+      }
+
+      .state {
+        fill: none;
+        stroke: #636363;
+        stroke-width: 1px;
+        stroke-linejoin: round;
+      }
+
+      #container {
+        margin:2%;
+        padding:20px;
+        border:2px solid #d0d0d0;
+        border-radius: 5px;
+      }
+ 
+      div.tooltip {
+        position: absolute;
+        text-align: center;
+        padding: 0.5em;
+        font-size: 10px;
+        color: #222;
+        background: #FFF;
+        border-radius: 2px;
+        pointer-events: none;
+        box-shadow: 0px 0px 2px 0px #a6a6a6;
+        text-shadow:#f5f5f5 0 1px 0;
+      }
+
+      .legend .legend-title {
+        text-align: left;
+        margin-bottom: 5px;
+        font-weight: bold;
+        font-size: 90%;
+      }
+      .legend .legend-scale ul {
+        margin: 0;
+        margin-bottom: 5px;
+        padding: 0;
+        float: left;
+        list-style: none;
+      }
+      .legend .legend-scale ul li {
+        font-size: 80%;
+        list-style: none;
+        margin-left: 0;
+        line-height: 18px;
+        margin-bottom: 2px;
+        }
+      .legend ul.legend-labels li span {
+        display: block;
+        float: left;
+        height: 20px;
+        width: 20px;
+        margin-right: 5px;
+        margin-left: 0;
+      }
+      .legend .legend-source {
+        font-size: 70%;
+        color: #999;
+        clear: both;
+      }
+      .slice text {
+            font-size: 11pt;
+            font-family: Arial;
+        }  
+
+    </style>
+  </head>
+  <body onload="sizeChange()">
+
+    
+    <div style="display: inline-block; width:65%">
+      <h4> Total Candidates</h4>
+      <input type="radio" name="analysis" value=0 checked/> Total Canditates parcipated<br />
+      <input type="radio" name="analysis" value=1 /> Candidates with criminal Cases(%)<br />
+      <input type="radio" name="analysis" value=2 /> Candidates who are graduate and above(%)<br />
+      <input type="radio" name="analysis" value=3 /> Female Candidates(%)<br />
+      <input type="radio" name="analysis" value=4 /> Ruling party<br />
+      <input type="radio" name="analysis" value=5 /> Winner criminal status<br />
+    </div>
+    <div>
+      <div class='legend' style="display: inline-block;width:25%">
+          <div class='legend-title'>Political Party</div>
+          <div class='legend-scale'>
+          </div>
+        </div>
+    </div>
+
+  	<div>
+	    <div id="container" style="display: inline-block; width:65%">
+	      <h1>Parliamentary Constituencies, 2014</h1>
+       
+
+	    </div>
+	    <div id="state_container" style="display: inline-block;width:25%">
+	      <h1>State Details</h1>
+	      <div id="constDetials">
+	      </div>
+	    </div>
+    </div>
+      <script type="text/javascript">
+
+      	function parse(val) {
+		    var result = "Not found",
+		        tmp = [];
+		    location.search
+		    //.replace ( "?", "" ) 
+		    // this is better, there might be a question mark inside
+		    .substr(1)
+		        .split("&")
+		        .forEach(function (item) {
+		        tmp = item.split("=");
+		        if (tmp[0] === val) result = decodeURIComponent(tmp[1]);
+		    });
+		    return result;
+		}
+
+        d3.select(window).on("resize", sizeChange);
+
+        //Set d3 scale
+        var stateCode=parse("state");
+        if(stateCode=="Not found")stateCode="AP";
+        var color_domain = ['GEN','SC','ST'];
+        var legend_labels = ['GEN','SC','ST'];
+        var legend_labels1 = ["TDP","TRS","Yuvajana Sramika Rythu Congress Party","INC","BJP","All India Majlis-E-Ittehadul Muslimeen"];
+
+        //Set tooltip
+        var div = d3.select("body").append("div")
+         .attr("class", "tooltip")
+         .style("opacity", 0);
+
+        //Set d3 projection, path and svg
+        var projection = d3.geo.mercator()
+            .center([78, 27])
+            .scale(1200);
+
+
+         var color = d3.scale.linear()
+			      .domain([0, 7, 14, 21, 28, 35,42])
+			      .range(["#f6e5e5", "#e5b2b2", "#d47f7f", "#c34c4c", "#b21919", "#aa0000","#ff0000"]);
+         var color1 = d3.scale.linear()
+            .domain([0, 5,10 , 15, 20, 25,30])
+            .range(["#f6e5e5", "#e5b2b2", "#d47f7f", "#c34c4c", "#b21919", "#aa0000","#ff0000"]);
+
+        var color2 = d3.scale.linear()
+            .domain([0, 1,2 , 3 ,4, 5,6])
+            .range(["#f6e5e5", "#e5b2b2", "#d47f7f", "#c34c4c", "#b21919", "#aa0000","#ff0000"]);
+
+        var color3 = d3.scale.linear()
+            .domain([0, 4,8 , 12, 16, 20,24])
+            .range(["#f6e5e5", "#e5b2b2", "#d47f7f", "#c34c4c", "#b21919", "#aa0000","#ff0000"]);
+        var color4 = d3.scale.ordinal()
+            .domain(["TDP","TRS","Yuvajana Sramika Rythu Congress Party","INC","BJP","All India Majlis-E-Ittehadul Muslimeen"])
+            .range(["yellow", "pink", "blue", "white", "orange", "green"]);
+
+
+        var path = d3.geo.path()
+            .projection(projection);
+
+        var selected=0;
+        var svg;
+        function changeContent(){
+          d3.select("#container").html("");
+          svg = d3.select("#container")
+            .append("svg")
+            .attr("width", "100%")
+            .attr("height","100%")
+            .call(d3.behavior.zoom().scaleExtent([1, 8]).on("zoom", zoom))
+            .append("g");
+
+          //Wait for data files to download before drawing
+
+          queue()
+            .defer(d3.json, "india_pc_2014_simplified.topojson")
+            .defer(d3.json, "india_state_2014_simplified.topojson")
+            .defer(d3.csv, "results1.csv") //sample data
+            .await(ready);
+        }
+        function ready(error, pc, state, data) {
+
+          //Set up for visualizing sample data
+          var pairColorWithId = {};
+          var pairNameWithId = {};
+          var pairDataWithId={};
+          data = jQuery.grep(data, function( d ) {
+			  return d.ST_NAME==stateCode;
+			});
+          data.forEach(function(d) {
+            pairNameWithId[d.ST_CODE + d.PC_CODE] = d.PC_NAME;
+            pairColorWithId[d.ST_CODE + d.PC_CODE]=color((d.totalc/d.total)*100);
+            pairDataWithId[d.ST_CODE + d.PC_CODE]=d;
+          });
+
+          //Drawing pc boundaries
+          var pc_geojson = topojson.feature(pc, pc.objects.india_pc_2014);
+           pc_geojson.features = jQuery.grep(pc_geojson.features, function( d ) {
+			  return d.properties.ST_NAME==stateCode;
+			});
+          //console.log(pc_geojson.features);
+
+
+
+
+
+
+
+          svg.selectAll(".pc")
+              .data(pc_geojson.features)
+              .enter().append("path")
+              .attr("class", "pc")
+              .attr("d", path)
+              .style ( "fill" , function (d) {
+                if(selected==0)return color1(pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].total);
+                else if(selected==1)return color2(pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].totalc);
+                else if(selected==2)return color3(pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].graduated);
+                else if(selected==3)return color2(pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].women);
+                else if(selected==4)return color4(pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].Party);
+                
+              })
+              .style("opacity", 0.8)
+              .on("click",function(d){
+              	d3.select("#constDetials").html("");
+              	var x=pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].TotalAssets;
+
+
+
+
+
+				x=x.toString();
+				var lastThree = x.substring(x.length-3);
+				var otherNumbers = x.substring(0,x.length-3);
+				if(otherNumbers != '')
+				    lastThree = ',' + lastThree;
+				var res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
+				x=pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].criminal;
+				if(x==1)x="<strong style='color: red;'>Has Criminal Cases Pending</strong>";
+				else x="<strong style='color: green;'>No Criminal Cases Pending</strong>";
+              	d3.select("#constDetials").html("<h3>"+pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].PC_NAME+" Winner Details</h3><br>Party:- "+pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].Party+"<br> Age:-"+pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].Age+"<br> Education:-"+pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].Education+"<br> Total Assets:-Rs. "+res+"<br> Crime Status:-"+x+"<br><h4>Participated candidates analysis</h4>");
+              	var piedata = [{"label":"Crime background candidates", "value":pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].totalc}, 
+			            {"label":"Others", "value":pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].total-pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].totalc}];
+			    d3.select("#constDetials").append("h3").html("Crime Background Data(%)");
+			    var w = 200,                        //width
+				    h = 200,                            //height
+				    r = 60,                            //radius
+				    piecolor = d3.scale.ordinal()
+    					.range(["#ff0000", "skyblue"]);
+          var piecolor1 = d3.scale.ordinal()
+              .range(["#d27f1d", "aqua","burlywood"]);   //builtin range of colors
+
+				var vis = d3.select("#constDetials")
+				        .append("svg:svg")              //create the SVG element inside the <body>
+				        .data([piedata])                   //associate our data with the document
+				            .attr("width", w)           //set the width and height of our visualization (these will be attributes of the <svg> tag
+				            .attr("height", h)
+				        .append("svg:g")                //make a group to hold our pie chart
+				            .attr("transform", "translate(" + (r+70) + "," + (r+50) + ")");    //move the center of the pie chart from 0, 0 to radius, radius
+              	var arc = d3.svg.arc()              //this will create <path> elements for us using arc data
+        				.outerRadius(r)
+    					.innerRadius(r -20);
+        		var pie = d3.layout.pie()           //this will create arc data for us given a list of values
+        			.value(function(d) { return d.value; });    //we must tell it out to access the value of each element in our data array
+
+
+        		var arcs = vis.selectAll("g.slice")     //this selects all <g> elements with class slice (there aren't any yet)
+						        .data(pie)                          //associate the generated pie data (an array of arcs, each having startAngle, endAngle and value properties) 
+						        .enter()                            //this will create <g> elements for every "extra" data element that should be associated with a selection. The result is creating a <g> for every object in the data array
+						            .append("svg:g")                //create a group to hold each slice (we will have a <path> and a <text> element associated with each slice)
+						                .attr("class", "slice");    //allow us to style things in the slices (like text)
+
+						        arcs.append("svg:path")
+						                .attr("fill", function(d, i) { return piecolor(i); } ) //set the color for each slice to be chosen from the color function defined above
+						                
+                            .attr("d", arc);                                    //this creates the actual SVG path using the associated data (pie) with the arc drawing function
+
+						        arcs.append("svg:text")                                     //add a label to each slice
+						                .attr("transform", function(d) {                    //set the label's origin to the center of the arc
+						                //we have to make sure to set these before calling arc.centroi
+						                d.innerRadius = r-20;
+						                d.outerRadius = r;
+						                var c = arc.centroid(d),piex=c[0],piey=c[1], h = Math.sqrt(piex*piex + piey*piey);
+						                 return "translate(" + (piex/h * (r+10)) +  ',' +(piey/h * (r+10)) +  ")";
+						                //console.log(arc.centroid(d));
+						                //return "translate(" + arc.centroid(d) + ")";        //this gives us a pair of coordinates like [50, 50]
+						            })
+						            .attr("text-anchor", "middle")                          //center the text on it's origin
+						            .text(function(d) { return d.data.label; });        //get the label from our original data array
+
+                  var piedata1 = [{"label":"Graduated or above", "value":pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].graduated}, 
+                  {"label":"Illiterate", "value":pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].uneducated}, 
+                  {"label":"Others", "value":pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].total-pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].graduated-pairDataWithId[d.properties.ST_CODE + d.properties.PC_CODE].uneducated}];
+         
+                 d3.select("#constDetials").append("h3").html("Education Data(%)");
+
+                  var vis1 = d3.select("#constDetials")
+                  .append("svg:svg")              //create the SVG element inside the <body>
+                  .data([piedata1])                   //associate our data with the document
+                      .attr("width", w)           //set the width and height of our visualization (these will be attributes of the <svg> tag
+                      .attr("height", h)
+                  .append("svg:g")                //make a group to hold our pie chart
+                      .attr("transform", "translate(" + (r+70) + "," + (r+50) + ")");    //move the center of the pie chart from 0, 0 to radius, radius
+
+                  var arcs1 = vis1.selectAll("g.slice")     //this selects all <g> elements with class slice (there aren't any yet)
+                    .data(pie)                          //associate the generated pie data (an array of arcs, each having startAngle, endAngle and value properties) 
+                    .enter()                            //this will create <g> elements for every "extra" data element that should be associated with a selection. The result is creating a <g> for every object in the data array
+                        .append("svg:g")                //create a group to hold each slice (we will have a <path> and a <text> element associated with each slice)
+                            .attr("class", "slice");    //allow us to style things in the slices (like text)
+
+                    arcs1.append("svg:path")
+                            .attr("fill", function(d, i) { return piecolor1(i); } ) //set the color for each slice to be chosen from the color function defined above
+                            .attr("d", arc);                                    //this creates the actual SVG path using the associated data (pie) with the arc drawing function
+
+                    arcs1.append("svg:text")                                     //add a label to each slice
+                            .attr("transform", function(d) {                    //set the label's origin to the center of the arc
+                            //we have to make sure to set these before calling arc.centroi
+                            d.innerRadius = r-20;
+                            d.outerRadius = r;
+                            var c = arc.centroid(d),piex=c[0],piey=c[1], h = Math.sqrt(piex*piex + piey*piey);
+                             return "translate(" + (piex/h * (r+10)) +  ',' +(piey/h * (r+10)) +  ")";
+                            //console.log(arc.centroid(d));
+                            //return "translate(" + arc.centroid(d) + ")";        //this gives us a pair of coordinates like [50, 50]
+                        })
+                        .attr("text-anchor", "middle")                          //center the text on it's origin
+                        .text(function(d) { return d.data.label; });        //get the label from our original data array
+
+
+              })
+              .on("mouseover", function(d) {
+                 d3.select(this).transition().duration(300).style("opacity", 1);
+                 div.transition().duration(300)
+                 .style("opacity", 1)
+                 div.text(pairNameWithId[d.properties.ST_CODE + d.properties.PC_CODE] )
+                 .style("left", (d3.event.pageX) + "px")
+                 .style("top", (d3.event.pageY -30) + "px");
+              })
+              .on("mouseout", function() {
+                 d3.select(this)
+                 .transition().duration(300)
+                 .style("opacity", 0.8);
+                 div.transition().duration(300)
+                 .style("opacity", 0);
+              })
+          ;
+
+          //Drawing state boundaries          
+          var state_geojson = topojson.feature(state, state.objects.india_state_2014);
+          /*state_geojson.features = jQuery.grep(state_geojson.features, function( d ) {
+			  return d.properties.ST_NAME==stateCode;
+			});*/
+          console.log(state_geojson);
+         
+          svg.selectAll(".state")
+              .data(state_geojson.features)
+              .enter().append("path")
+              .attr("class", "state")
+              .attr("d", path);
+        }
+
+        //Set up for drawing html legend elements
+        var legend = d3.select('.legend-scale')
+          .append('ul')
+          .attr('class', 'legend-labels');
+
+        var keys = legend.selectAll('li')
+          .data(color4.domain());
+
+        keys.enter().append('li')
+          .text(function(d, i){ return legend_labels1 [i];})
+          .append('span')
+          .style('background', function(d) { return color4(d); })
+          ;
+
+
+        //Function called when window is resized
+        function sizeChange() {
+          d3.select("g").attr("transform", "scale(" + $("#container").width()/1000 + ")");
+          $("svg").height($("#container").width()*0.75);
+        }
+
+        function zoom() {
+    		  svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    		}
+      $(document).ready(function(){
+         selected= $( "input[name='analysis']:checked" ).val();
+         changeContent();
+         $( "input[name='analysis']" ).change(function(){
+          selected= $( "input[name='analysis']:checked" ).val();
+          changeContent();
+         });
+      });
+
+      </script>
+  </body>
+</html>

@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<!-- <head>
+	<title>Index</title>
+	<style>
+		text {
+		  font: 10px sans-serif;
+		}
+	</style>
+</head>
+<body>
+	<script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<script>
+		var diameter = 960,
+		    format = d3.format(",d"),
+		    color = d3.scale.category20c();
+
+		var bubble = d3.layout.pack()
+		    .sort(null)
+		    .size([diameter, diameter])
+		    .padding(1.5);
+
+		var svg = d3.select("body").append("svg")
+		    .attr("width", diameter)
+		    .attr("height", diameter)
+		    .attr("class", "bubble");
+
+		d3.json("flare.json", function(error, root) {
+		  if (error) throw error;
+
+		  var node = svg.selectAll(".node")
+		      .data(bubble.nodes(classes(root))
+		      .filter(function(d) { return !d.children; }))
+		    .enter().append("g")
+		      .attr("class", "node")
+		      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+
+		  node.append("title")
+		      .text(function(d) { return d.className + ": " + format(d.value); });
+
+		  node.append("circle")
+		      .attr("r", function(d) { return d.r; })
+		      .style("fill", function(d) { return color(d.packageName); });
+
+		  node.append("text")
+		      .attr("dy", ".3em")
+		      .style("text-anchor", "middle")
+		      .text(function(d) { return d.className.substring(0, d.r / 3); });
+		});
+
+		// Returns a flattened hierarchy containing all leaf nodes under the root.
+		function classes(root) {
+		  var classes = [];
+
+		  function recurse(name, node) {
+		    if (node.children) node.children.forEach(function(child) { recurse(node.name, child); });
+		    else classes.push({packageName: name, className: node.name, value: node.size});
+		  }
+
+		  recurse(null, root);
+		  return {children: classes};
+		}
+
+		d3.select(self.frameElement).style("height", diameter + "px");
+
+		</script>
+	Hello World!!
+</body> -->
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<title>StateWise Election Analysis</title>
+	<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
+	<script src="http://colorbrewer2.org/export/colorbrewer.js"></script>
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="http://d3js.org/topojson.v1.min.js"></script>
+	<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+	<style>
+		.canton-boundary {
+		  fill: none;
+		  stroke: #fff;
+		  stroke-linejoin: round;
+		}
+
+		text {
+		  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+		  font-size: 10px;
+		  text-anchor: middle;
+		}
+		div.tooltip {
+        position: absolute;
+        text-align: center;
+        padding: 0.5em;
+        font-size: 10px;
+        color: #222;
+        white-space: pre;
+        background: #FFF;
+        border-radius: 2px;
+        pointer-events: none;
+        box-shadow: 0px 0px 2px 0px #a6a6a6;
+        text-shadow:#f5f5f5 0 1px 0;
+      }
+
+		.d3-tip {
+					  line-height: 1;
+					  font-weight: bold;
+					  padding: 12px;
+					  background: black;
+					  color: #fff;
+					  border-radius: 2px;
+					  opacity: 0.001%;
+					}
+					.d3-tip:after {
+					  box-sizing: border-box;
+					  display: inline;
+					  font-size: 10px;
+					  width: 100%;
+					  line-height: 1;
+					  color: black;
+					  content: "\25BC";
+					  position: absolute;
+					  text-align: center;
+					  opacity: 0.001%;
+					}
+
+					.d3-tip.n:after {
+					  margin: -1px 0 0 0;
+					  top: 100%;
+					  left: 0;
+					  opacity: 0.001%;
+					}
+					.area:hover {
+						fill: #0000ff;
+					}
+					
+	</style>
+</head>
+<body>
+	<h4> Election Data Analysis </h4>
+	<div id="Selection" style="display:inline-block">
+		<h2>Comparision:</h2>
+		<div>
+		<h4> Total Candidates</h4>
+		<input type="radio" name="analysis" value=0 /> Total Canditates per State<br />
+		<input type="radio" name="analysis" value=1 checked /> Candidates with criminal Cases(%)<br />
+		<input type="radio" name="analysis" value=2 /> Candidates with serious <strong>Criminal</strong> Cases(%)<br />
+		<input type="radio" name="analysis" value=3 /> Crorepathi candidates(%)<br />
+		<input type="radio" name="analysis" value=4 /> Candidates who are graduate and above(%)<br />
+		<input type="radio" name="analysis" value=5 /> Female Candidates(%)<br />
+		</div>
+		<div >
+		<h4> Winner Candidates</h4>
+		<input type="radio" name="analysis" value=6 /> Total Canditates per State<br />
+		<input type="radio" name="analysis" value=7 /> Candidates with criminal Cases(%)<br />
+		<input type="radio" name="analysis" value=8 /> Candidates with serious <strong>Criminal</strong> Cases(%)<br />
+		<input type="radio" name="analysis" value=9 /> Crorepathi candidates(%)<br />
+		<input type="radio" name="analysis" value=10 /> Candidates who are graduate and above(%)<br />
+		<input type="radio" name="analysis" value=11 /> Female Candidates(%)<br />
+		<input type="radio" name="analysis" value=12 /> Average contestansts per constituency<br />
+		</div>
+	</div>
+	<div id = "map" style = "display:inline-block;float : left; min-width:320px;width :50%;height : 600px">
+		<div id="subtitle"></div>
+	</div>
+	<script>
+	var width = 960,
+	    height = 600;
+	/*var color= d3.scale.ordinal()
+				.domain([1,2,3,4,5,6,7,8,9])
+				.range(colorbrewer.Oranges[9]);*/
+
+
+	var Totalcolor = d3.scale.linear()
+		      .domain([0,7000])
+		      .range(["#f6e5e5","#ff0000"]);
+	var Totalcolor1 = d3.scale.linear()
+		      .domain([0,300])
+		      .range(["#f6e5e5","#ff0000"]);
+
+	var color = d3.scale.linear()
+		      .domain([0, 15, 30, 45, 60, 75,90])
+		      .range(["#f6e5e5", "#e5b2b2", "#d47f7f", "#c34c4c", "#b21919", "#aa0000","#ff0000"]);
+	var color1 = d3.scale.linear()
+		      .domain([0, 7, 14, 21, 28, 35,42])
+		      .range(["#f6e5e5", "#e5b2b2", "#d47f7f", "#c34c4c", "#b21919", "#aa0000","#ff0000"]);
+	var color2 = d3.scale.linear()
+		      .domain([0, 4, 8, 12, 16, 20,24])
+		      .range(["#f6e5e5", "#e5b2b2", "#d47f7f", "#c34c4c", "#b21919", "#aa0000","#ff0000"]);
+	var color3 = d3.scale.linear()
+		      .domain([0, 10, 20, 30, 40, 50,60])
+		      .range(["#f6e5e5", "#e5b2b2", "#d47f7f", "#c34c4c", "#b21919", "#aa0000","#ff0000"]);
+	var color4 = d3.scale.linear()
+		      .domain([0, 2, 4, 6 ,8, 10,12])
+		      .range(["#f6e5e5", "#e5b2b2", "#d47f7f", "#c34c4c", "#b21919", "#aa0000","#ff0000"]);
+	var color5 = d3.scale.linear()
+		      .domain([0, 3, 6,9, 12, 15,18])
+		      .range(["#f6e5e5", "#e5b2b2", "#d47f7f", "#c34c4c", "#b21919", "#aa0000","#ff0000"]);	      
+
+	/*var projection = d3.geo.mercator()
+	    .scale(800)
+	    .translate([-500,600]);*/
+
+	<!--  -->
+
+	var projection = d3.geo.mercator().scale(1100).translate([-1000,800]);
+	var path = d3.geo.path()
+	    .projection(projection);
+	//Set tooltip
+    var div = d3.select("body").append("div")
+     .attr("class", "tooltip")
+     .style("opacity", 0);
+    function changeContent(selectedInput){ 
+    	d3.select("#subtitle").html("");
+		var svg = d3.select("#subtitle").append("svg")
+		    .attr("viewBox", "0 0 900 800")
+			 .attr("preserveAspectRatio", "xMidYMid meet");
+		var data;
+		d3.json("test.json", function(error, swiss) {
+		  if (error) throw error;
+
+		  var cantons = topojson.feature(swiss, swiss.objects.india);
+		  
+		  			//svg.call(tip);
+					var group=svg.selectAll("g")
+						.data(cantons.features)
+						.enter()
+						.append("g");
+					//console.log(group);
+						//.on('mouseover', tip.show)
+		      			//.on('mouseout', tip.hide)
+							
+							
+							/*var tip = d3.tip()
+									.attr('class', 'd3-tip')
+									.offset([-5, 0])
+									.style("left", "300px")
+									.style("top", "400px")
+									.html(function(d) {
+										return ("<a href="+d.nam+" target='_blank'>"+d.name +"</a>");
+									})
+									
+								svg.call(tip);*/
+							
+						//var projection = d3.geo.mercator().scale(900).translate([-600,700]);
+
+						var path= d3.geo.path().projection(projection);
+						
+						if(selectedInput==0){
+							var areas= group.append("path")
+								.attr("d", path)
+								.attr("class", "area")
+							 .attr("fill",function(d){ return Totalcolor(d.properties.TC);})
+							 .on("mouseover", function(d) {
+				                 d3.select(this).transition().duration(300).style("opacity", 1);
+				                 div.transition().duration(300)
+				                 .style("opacity", 1)
+				                 div.text(d.properties.NAME_1+'\nTotal Candidates='+d.properties.TC )
+				                 .style("left", (d3.event.pageX) + "px")
+				                 .style("top", (d3.event.pageY -30) + "px");
+				              })
+							 .on("mouseout", function() {
+				                 d3.select(this)
+				                 .transition().duration(300)
+				                 .style("opacity", 0.8);
+				                 div.transition().duration(300)
+				                 .style("opacity", 0);
+				              })
+							 .on("click",function(d){window.location="maps.html?state="+d.properties.ST_NAME;});
+							 var myscale=svg.selectAll(".legend")
+							 			 .data(Totalcolor.range())
+							 			 .enter()
+							 			 .append("g")
+							 			 .attr("class", "legend");
+							 var scalevalues= myscale.append("rect")
+							 					.attr("x", function(d, i) { return 300+ 40 * i; })
+			    								.attr("y", 700)
+							 					.attr("height",40)
+							 					.attr("width",40)
+							 					.attr("fill",function(d){return d;});
+							 myscale.append("text")
+					            .attr("class", "mono")
+					            .text(function(d,i) { return "= " + i*7000; })
+					            .attr("x", function(d, i) { return 300+40 * i; })
+					            .attr("y", 750);
+						}else if(selectedInput==1){
+							var areas= group.append("path")
+								.attr("d", path)
+								.attr("class", "area")
+							 .attr("fill",function(d){ return color1((d.properties.C/d.properties.TC)*100);})
+							 .on("mouseover", function(d) {
+				                 d3.select(this).transition().duration(300).style("opacity", 1);
+				                 div.transition().duration(300)
+				                 .style("opacity", 1)
+				                 div.text(d.properties.NAME_1+'\nCandidates with crime background='+(d.properties.C/d.properties.TC)*100+"%" )
+				                 .style("left", (d3.event.pageX) + "px")
+				                 .style("top", (d3.event.pageY -30) + "px");
+				              })
+							 .on("mouseout", function() {
+				                 d3.select(this)
+				                 .transition().duration(300)
+				                 .style("opacity", 0.8);
+				                 div.transition().duration(300)
+				                 .style("opacity", 0);
+				              })
+							 .on("click",function(d){window.location="maps.html?state="+d.properties.ST_NAME;});
+							 var myscale=svg.selectAll(".legend")
+							 			 .data(color1.range())
+							 			 .enter()
+							 			 .append("g")
+							 			 .attr("class", "legend");
+							 var scalevalues= myscale.append("rect")
+							 					.attr("x", function(d, i) { return 300+ 40 * i; })
+			    								.attr("y", 700)
+							 					.attr("height",40)
+							 					.attr("width",40)
+							 					.attr("fill",function(d){return d;});
+							 myscale.append("text")
+					            .attr("class", "mono")
+					            .text(function(d,i) { return "= " + i*7 +"%"; })
+					            .attr("x", function(d, i) { return 300+40 * i; })
+					            .attr("y", 750);
+						}else if(selectedInput==2){
+							var areas= group.append("path")
+								.attr("d", path)
+								.attr("class", "area")
+							 .attr("fill",function(d){ return color2((d.properties.SC/d.properties.TC)*100);})
+							 .on("mouseover", function(d) {
+				                 d3.select(this).transition().duration(300).style("opacity", 1);
+				                 div.transition().duration(300)
+				                 .style("opacity", 1)
+				                 div.text(d.properties.NAME_1+'\n Candidates with serious crime background ='+(d.properties.SC/d.properties.TC)*100+"%" )
+				                 .style("left", (d3.event.pageX) + "px")
+				                 .style("top", (d3.event.pageY -30) + "px");
+				              })
+							 .on("mouseout", function() {
+				                 d3.select(this)
+				                 .transition().duration(300)
+				                 .style("opacity", 0.8);
+				                 div.transition().duration(300)
+				                 .style("opacity", 0);
+				              })
+							 .on("click",function(d){window.location="maps.html?state="+d.properties.ST_NAME;});
+							 var myscale=svg.selectAll(".legend")
+							 			 .data(color2.range())
+							 			 .enter()
+							 			 .append("g")
+							 			 .attr("class", "legend");
+							 var scalevalues= myscale.append("rect")
+							 					.attr("x", function(d, i) { return 300+ 40 * i; })
+			    								.attr("y", 700)
+							 					.attr("height",40)
+							 					.attr("width",40)
+							 					.attr("fill",function(d){return d;});
+							 myscale.append("text")
+					            .attr("class", "mono")
+					            .text(function(d,i) { return "= " + i*4 +"%"; })
+					            .attr("x", function(d, i) { return 300+40 * i; })
+					            .attr("y", 750);
+						}else if(selectedInput==3){
+							var areas= group.append("path")
+								.attr("d", path)
+								.attr("class", "area")
+							 .attr("fill",function(d){ return color3((d.properties.Cr/d.properties.TC)*100);})
+							 .on("mouseover", function(d) {
+				                 d3.select(this).transition().duration(300).style("opacity", 1);
+				                 div.transition().duration(300)
+				                 .style("opacity", 1)
+				                 div.text(d.properties.NAME_1+'\nCandidates who are crorepathis='+(d.properties.Cr/d.properties.TC)*100+"%" )
+				                 .style("left", (d3.event.pageX) + "px")
+				                 .style("top", (d3.event.pageY -30) + "px");
+				              })
+							 .on("mouseout", function() {
+				                 d3.select(this)
+				                 .transition().duration(300)
+				                 .style("opacity", 0.8);
+				                 div.transition().duration(300)
+				                 .style("opacity", 0);
+				              })
+							 .on("click",function(d){window.location="maps.html?state="+d.properties.ST_NAME;});
+							 var myscale=svg.selectAll(".legend")
+							 			 .data(color3.range())
+							 			 .enter()
+							 			 .append("g")
+							 			 .attr("class", "legend");
+							 var scalevalues= myscale.append("rect")
+							 					.attr("x", function(d, i) { return 300+ 40 * i; })
+			    								.attr("y", 700)
+							 					.attr("height",40)
+							 					.attr("width",40)
+							 					.attr("fill",function(d){return d;});
+							 myscale.append("text")
+					            .attr("class", "mono")
+					            .text(function(d,i) { return "= " + i*10 +"%"; })
+					            .attr("x", function(d, i) { return 300+40 * i; })
+					            .attr("y", 750);
+						}else if(selectedInput==4){
+							var areas= group.append("path")
+								.attr("d", path)
+								.attr("class", "area")
+							 .attr("fill",function(d){ return color((d.properties.G/d.properties.TC)*100);})
+							 .on("mouseover", function(d) {
+				                 d3.select(this).transition().duration(300).style("opacity", 1);
+				                 div.transition().duration(300)
+				                 .style("opacity", 1)
+				                 div.text(d.properties.NAME_1+'\nCandidates who are completed graduation or above ='+(d.properties.G/d.properties.TC)*100+"%" )
+				                 .style("left", (d3.event.pageX) + "px")
+				                 .style("top", (d3.event.pageY -30) + "px");
+				              })
+							 .on("mouseout", function() {
+				                 d3.select(this)
+				                 .transition().duration(300)
+				                 .style("opacity", 0.8);
+				                 div.transition().duration(300)
+				                 .style("opacity", 0);
+				              })
+							 .on("click",function(d){window.location="maps.html?state="+d.properties.ST_NAME;});
+							 var myscale=svg.selectAll(".legend")
+							 			 .data(color.range())
+							 			 .enter()
+							 			 .append("g")
+							 			 .attr("class", "legend");
+							 var scalevalues= myscale.append("rect")
+							 					.attr("x", function(d, i) { return 300+ 40 * i; })
+			    								.attr("y", 700)
+							 					.attr("height",40)
+							 					.attr("width",40)
+							 					.attr("fill",function(d){return d;});
+							 myscale.append("text")
+					            .attr("class", "mono")
+					            .text(function(d,i) { return "= " + i*15 +"%"; })
+					            .attr("x", function(d, i) { return 300+40 * i; })
+					            .attr("y", 750);
+						}else if(selectedInput==5){
+							var areas= group.append("path")
+								.attr("d", path)
+								.attr("class", "area")
+							 .attr("fill",function(d){ return color4((d.properties.Wo/d.properties.TC)*100);})
+							 .on("mouseover", function(d) {
+				                 d3.select(this).transition().duration(300).style("opacity", 1);
+				                 div.transition().duration(300)
+				                 .style("opacity", 1)
+				                 div.text(d.properties.NAME_1+'\nFemale Candidates='+(d.properties.Wo/d.properties.TC)*100+"%" )
+				                 .style("left", (d3.event.pageX) + "px")
+				                 .style("top", (d3.event.pageY -30) + "px");
+				              })
+							 .on("mouseout", function() {
+				                 d3.select(this)
+				                 .transition().duration(300)
+				                 .style("opacity", 0.8);
+				                 div.transition().duration(300)
+				                 .style("opacity", 0);
+				              })
+							 .on("click",function(d){window.location="maps.html?state="+d.properties.ST_NAME;});
+							 var myscale=svg.selectAll(".legend")
+							 			 .data(color4.range())
+							 			 .enter()
+							 			 .append("g")
+							 			 .attr("class", "legend");
+							 var scalevalues= myscale.append("rect")
+							 					.attr("x", function(d, i) { return 300+ 40 * i; })
+			    								.attr("y", 700)
+							 					.attr("height",40)
+							 					.attr("width",40)
+							 					.attr("fill",function(d){return d;});
+							 myscale.append("text")
+					            .attr("class", "mono")
+					            .text(function(d,i) { return "= " + i*2 +"%"; })
+					            .attr("x", function(d, i) { return 300+40 * i; })
+					            .attr("y", 750);
+						}else if(selectedInput==6){
+							var areas= group.append("path")
+								.attr("d", path)
+								.attr("class", "area")
+							 .attr("fill",function(d){ return Totalcolor1(d.properties.wTC);})
+							 .on("mouseover", function(d) {
+				                 d3.select(this).transition().duration(300).style("opacity", 1);
+				                 div.transition().duration(300)
+				                 .style("opacity", 1)
+				                 div.text(d.properties.NAME_1+'\nWon Candidates='+d.properties.wTC )
+				                 .style("left", (d3.event.pageX) + "px")
+				                 .style("top", (d3.event.pageY -30) + "px");
+				              })
+							 .on("mouseout", function() {
+				                 d3.select(this)
+				                 .transition().duration(300)
+				                 .style("opacity", 0.8);
+				                 div.transition().duration(300)
+				                 .style("opacity", 0);
+				              })
+							 .on("click",function(d){window.location="maps.html?state="+d.properties.ST_NAME;});
+							 var myscale=svg.selectAll(".legend")
+							 			 .data(Totalcolor1.range())
+							 			 .enter()
+							 			 .append("g")
+							 			 .attr("class", "legend");
+							 var scalevalues= myscale.append("rect")
+							 					.attr("x", function(d, i) { return 300+ 40 * i; })
+			    								.attr("y", 700)
+							 					.attr("height",40)
+							 					.attr("width",40)
+							 					.attr("fill",function(d){return d;});
+							 myscale.append("text")
+					            .attr("class", "mono")
+					            .text(function(d,i) { return "= " + i*300 +"%"; })
+					            .attr("x", function(d, i) { return 300+40 * i; })
+					            .attr("y", 750);
+						}else if(selectedInput==7){
+							var areas= group.append("path")
+								.attr("d", path)
+								.attr("class", "area")
+							 .attr("fill",function(d){ return color((d.properties.wC/d.properties.wTC)*100);})
+							 .on("mouseover", function(d) {
+				                 d3.select(this).transition().duration(300).style("opacity", 1);
+				                 div.transition().duration(300)
+				                 .style("opacity", 1)
+				                 div.text(d.properties.NAME_1+'\nWon candidates with crime background='+(d.properties.wC/d.properties.wTC)*100+"%" )
+				                 .style("left", (d3.event.pageX) + "px")
+				                 .style("top", (d3.event.pageY -30) + "px");
+				              })
+							 .on("mouseout", function() {
+				                 d3.select(this)
+				                 .transition().duration(300)
+				                 .style("opacity", 0.8);
+				                 div.transition().duration(300)
+				                 .style("opacity", 0);
+				              })
+							 .on("click",function(d){window.location="maps.html?state="+d.properties.ST_NAME;});
+							 var myscale=svg.selectAll(".legend")
+							 			 .data(color.range())
+							 			 .enter()
+							 			 .append("g")
+							 			 .attr("class", "legend");
+							 var scalevalues= myscale.append("rect")
+							 					.attr("x", function(d, i) { return 300+ 40 * i; })
+			    								.attr("y", 700)
+							 					.attr("height",40)
+							 					.attr("width",40)
+							 					.attr("fill",function(d){return d;});
+							 myscale.append("text")
+					            .attr("class", "mono")
+					            .text(function(d,i) { return "= " + i*15 +"%"; })
+					            .attr("x", function(d, i) { return 300+40 * i; })
+					            .attr("y", 750);
+						}else if(selectedInput==8){
+							var areas= group.append("path")
+								.attr("d", path)
+								.attr("class", "area")
+							 .attr("fill",function(d){ return color((d.properties.wSC/d.properties.wTC)*100);})
+							 .on("mouseover", function(d) {
+				                 d3.select(this).transition().duration(300).style("opacity", 1);
+				                 div.transition().duration(300)
+				                 .style("opacity", 1)
+				                 div.text(d.properties.NAME_1+'\n Won candidates with serious crime background ='+(d.properties.wSC/d.properties.wTC)*100+"%" )
+				                 .style("left", (d3.event.pageX) + "px")
+				                 .style("top", (d3.event.pageY -30) + "px");
+				              })
+							 .on("mouseout", function() {
+				                 d3.select(this)
+				                 .transition().duration(300)
+				                 .style("opacity", 0.8);
+				                 div.transition().duration(300)
+				                 .style("opacity", 0);
+				              })
+							 .on("click",function(d){window.location="maps.html?state="+d.properties.ST_NAME;});
+							 var myscale=svg.selectAll(".legend")
+							 			 .data(color.range())
+							 			 .enter()
+							 			 .append("g")
+							 			 .attr("class", "legend");
+							 var scalevalues= myscale.append("rect")
+							 					.attr("x", function(d, i) { return 300+ 40 * i; })
+			    								.attr("y", 700)
+							 					.attr("height",40)
+							 					.attr("width",40)
+							 					.attr("fill",function(d){return d;});
+							 myscale.append("text")
+					            .attr("class", "mono")
+					            .text(function(d,i) { return "= " + i*15 +"%"; })
+					            .attr("x", function(d, i) { return 300+40 * i; })
+					            .attr("y", 750);
+						}else if(selectedInput==9){
+							var areas= group.append("path")
+								.attr("d", path)
+								.attr("class", "area")
+							 .attr("fill",function(d){ return color((d.properties.wCr/d.properties.wTC)*100);})
+							 .on("mouseover", function(d) {
+				                 d3.select(this).transition().duration(300).style("opacity", 1);
+				                 div.transition().duration(300)
+				                 .style("opacity", 1)
+				                 div.text(d.properties.NAME_1+'\nWon candidates who are crorepathis='+(d.properties.wCr/d.properties.wTC)*100+"%" )
+				                 .style("left", (d3.event.pageX) + "px")
+				                 .style("top", (d3.event.pageY -30) + "px");
+				              })
+							 .on("mouseout", function() {
+				                 d3.select(this)
+				                 .transition().duration(300)
+				                 .style("opacity", 0.8);
+				                 div.transition().duration(300)
+				                 .style("opacity", 0);
+				              })
+							 .on("click",function(d){window.location="maps.html?state="+d.properties.ST_NAME;});
+							 var myscale=svg.selectAll(".legend")
+							 			 .data(color.range())
+							 			 .enter()
+							 			 .append("g")
+							 			 .attr("class", "legend");
+							 var scalevalues= myscale.append("rect")
+							 					.attr("x", function(d, i) { return 300+ 40 * i; })
+			    								.attr("y", 700)
+							 					.attr("height",40)
+							 					.attr("width",40)
+							 					.attr("fill",function(d){return d;});
+							 myscale.append("text")
+					            .attr("class", "mono")
+					            .text(function(d,i) { return "= " + i*15 +"%"; })
+					            .attr("x", function(d, i) { return 300+40 * i; })
+					            .attr("y", 750);
+						}else if(selectedInput==10){
+							var areas= group.append("path")
+								.attr("d", path)
+								.attr("class", "area")
+							 .attr("fill",function(d){ return color((d.properties.wG/d.properties.wTC)*100);})
+							 .on("mouseover", function(d) {
+				                 d3.select(this).transition().duration(300).style("opacity", 1);
+				                 div.transition().duration(300)
+				                 .style("opacity", 1)
+				                 div.text(d.properties.NAME_1+'\nWon candidates who are completed graduation or above ='+(d.properties.wG/d.properties.wTC)*100+"%" )
+				                 .style("left", (d3.event.pageX) + "px")
+				                 .style("top", (d3.event.pageY -30) + "px");
+				              })
+							 .on("mouseout", function() {
+				                 d3.select(this)
+				                 .transition().duration(300)
+				                 .style("opacity", 0.8);
+				                 div.transition().duration(300)
+				                 .style("opacity", 0);
+				              })
+							 .on("click",function(d){window.location="maps.html?state="+d.properties.ST_NAME;});
+							 var myscale=svg.selectAll(".legend")
+							 			 .data(color.range())
+							 			 .enter()
+							 			 .append("g")
+							 			 .attr("class", "legend");
+							 var scalevalues= myscale.append("rect")
+							 					.attr("x", function(d, i) { return 300+ 40 * i; })
+			    								.attr("y", 700)
+							 					.attr("height",40)
+							 					.attr("width",40)
+							 					.attr("fill",function(d){return d;});
+							 myscale.append("text")
+					            .attr("class", "mono")
+					            .text(function(d,i) { return "= " + i*15 +"%"; })
+					            .attr("x", function(d, i) { return 300+40 * i; })
+					            .attr("y", 750);
+						}else if(selectedInput==11){
+							var areas= group.append("path")
+								.attr("d", path)
+								.attr("class", "area")
+							 .attr("fill",function(d){ return color2((d.properties.wWo/d.properties.wTC)*100);})
+							 .on("mouseover", function(d) {
+				                 d3.select(this).transition().duration(300).style("opacity", 1);
+				                 div.transition().duration(300)
+				                 .style("opacity", 1)
+				                 div.text(d.properties.NAME_1+'\nFemale won Candidates='+(d.properties.wWo/d.properties.wTC)*100+"%" )
+				                 .style("left", (d3.event.pageX) + "px")
+				                 .style("top", (d3.event.pageY -30) + "px");
+				              })
+							 .on("mouseout", function() {
+				                 d3.select(this)
+				                 .transition().duration(300)
+				                 .style("opacity", 0.8);
+				                 div.transition().duration(300)
+				                 .style("opacity", 0);
+				              })
+							 .on("click",function(d){window.location="maps.html?state="+d.properties.ST_NAME;});
+							 var myscale=svg.selectAll(".legend")
+							 			 .data(color2.range())
+							 			 .enter()
+							 			 .append("g")
+							 			 .attr("class", "legend");
+							 var scalevalues= myscale.append("rect")
+							 					.attr("x", function(d, i) { return 300+ 40 * i; })
+			    								.attr("y", 700)
+							 					.attr("height",40)
+							 					.attr("width",40)
+							 					.attr("fill",function(d){return d;});
+							 myscale.append("text")
+					            .attr("class", "mono")
+					            .text(function(d,i) { return "= " + i*4 +"%"; })
+					            .attr("x", function(d, i) { return 300+40 * i; })
+					            .attr("y", 750);
+						}
+						
+						else if(selectedInput==12){
+							var areas= group.append("path")
+								.attr("d", path)
+								.attr("class", "area")
+							 .attr("fill",function(d){ return color5((d.properties.TC/d.properties.wTC));})
+							 .on("mouseover", function(d) {
+				                 d3.select(this).transition().duration(300).style("opacity", 1);
+				                 div.transition().duration(300)
+				                 .style("opacity", 1)
+				                 div.text(d.properties.NAME_1+'\nAverage contestansts per constituency='+(d.properties.TC/d.properties.wTC))
+				                 .style("left", (d3.event.pageX) + "px")
+				                 .style("top", (d3.event.pageY -30) + "px");
+				              })
+							 .on("mouseout", function() {
+				                 d3.select(this)
+				                 .transition().duration(300)
+				                 .style("opacity", 0.8);
+				                 div.transition().duration(300)
+				                 .style("opacity", 0);
+				              })
+							 .on("click",function(d){window.location="maps.html?state="+d.properties.ST_NAME;});
+							 var myscale=svg.selectAll(".legend")
+							 			 .data(color5.range())
+							 			 .enter()
+							 			 .append("g")
+							 			 .attr("class", "legend");
+							 var scalevalues= myscale.append("rect")
+							 					.attr("x", function(d, i) { return 300+ 40 * i; })
+			    								.attr("y", 700)
+							 					.attr("height",40)
+							 					.attr("width",40)
+							 					.attr("fill",function(d){return d;});
+							 myscale.append("text")
+					            .attr("class", "mono")
+					            .text(function(d,i) { return "= " + i*3 +"%"; })
+					            .attr("x", function(d, i) { return 300+40 * i; })
+					            .attr("y", 750);
+						} 
+						 console.log(areas);
+		});
+	}
+	$(document).ready(function(){
+		 var checkedValue= $( "input[name='analysis']:checked" ).val();
+		 changeContent(checkedValue);
+		 $( "input[name='analysis']" ).change(function(){
+		 	var checkedValue= $( "input[name='analysis']:checked" ).val();
+		 	changeContent(checkedValue);
+		 });
+	});
+	</script>
+</body>
